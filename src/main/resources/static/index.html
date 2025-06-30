@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Clientes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('https://images.pexels.com/photos/269077/pexels-photo-269077.jpeg');
+            background-size: cover;
+
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .contenedor {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+
+        .seccion {
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        input {
+            padding: 10px;
+            margin: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 180px;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 8px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        #clientePorId {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>Gestión de Clientes</h1>
+
+        <div class="seccion">
+            <h2>Crear Cliente</h2>
+            <input type="number" id="id" placeholder="ID">
+            <input type="text" id="nombre" placeholder="Nombre">
+            <input type="text" id="apellido" placeholder="Apellido">
+            <input type="email" id="email" placeholder="Email">
+            <br>
+            <button onclick="crearCliente()">Crear</button>
+        </div>
+
+        <div class="seccion">
+            <h2>Consultar Cliente por ID</h2>
+            <input type="number" id="buscarId" placeholder="ID">
+            <button onclick="consultarPorId()">Buscar</button>
+            <div id="clientePorId"></div>
+        </div>
+
+        <div class="seccion">
+            <h2>Actualizar Cliente</h2>
+            <input type="number" id="updId" placeholder="ID">
+            <input type="text" id="updNombre" placeholder="Nombre">
+            <input type="text" id="updApellido" placeholder="Apellido">
+            <input type="email" id="updEmail" placeholder="Email">
+            <br>
+            <button onclick="actualizarCliente()">Actualizar</button>
+        </div>
+
+        <div class="seccion">
+            <h2>Eliminar Cliente</h2>
+            <input type="number" id="delId" placeholder="ID">
+            <button onclick="eliminarCliente()">Eliminar</button>
+        </div>
+
+        <div class="seccion">
+            <h2>Todos los Clientes</h2>
+            <button onclick="mostrarTodos()">Mostrar Todos</button>
+            <table id="tablaClientes">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const api = '/api/clientes';
+
+        function crearCliente() {
+            fetch(api + '/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: document.getElementById('id').value,
+                    nombre: document.getElementById('nombre').value,
+                    apellido: document.getElementById('apellido').value,
+                    email: document.getElementById('email').value
+                })
+            })
+            .then(r => {
+                if (r.ok) return r.json();
+                throw new Error('Error al crear cliente');
+            })
+            .then(() => { alert('Cliente creado'); mostrarTodos(); })
+            .catch(e => alert(e.message));
+        }
+
+        function consultarPorId() {
+            const id = document.getElementById('buscarId').value;
+            fetch(api + '/' + id)
+                .then(r => {
+                    if (r.status === 404) return null;
+                    return r.json();
+                })
+                .then(cliente => {
+                    document.getElementById('clientePorId').innerText =
+                        cliente && cliente.nombre ? 
+                        `ID: ${cliente.id}, Nombre: ${cliente.nombre}, Apellido: ${cliente.apellido}, Email: ${cliente.email}` :
+                        'No encontrado';
+                });
+        }
+
+        function actualizarCliente() {
+            const id = document.getElementById('updId').value;
+            fetch(api + '/actualizar/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    nombre: document.getElementById('updNombre').value,
+                    apellido: document.getElementById('updApellido').value,
+                    email: document.getElementById('updEmail').value
+                })
+            })
+            .then(r => {
+                if (r.ok) return r.json();
+                throw new Error('Error al actualizar cliente');
+            })
+            .then(() => { alert('Cliente actualizado'); mostrarTodos(); })
+            .catch(e => alert(e.message));
+        }
+
+        function eliminarCliente() {
+            const id = document.getElementById('delId').value;
+            fetch(api + '/delete/' + id, { method: 'DELETE' })
+                .then(r => {
+                    if (r.status === 204) {
+                        alert('Cliente eliminado');
+                        mostrarTodos();
+                    } else {
+                        alert('No se encontró el cliente');
+                    }
+                });
+        }
+
+        function mostrarTodos() {
+            fetch(api)
+                .then(r => {
+                    if (r.status === 204) return [];
+                    return r.json();
+                })
+                .then(clientes => {
+                    const tbody = document.querySelector('#tablaClientes tbody');
+                    tbody.innerHTML = '';
+                    clientes.forEach(c => {
+                        const row = `<tr>
+                            <td>${c.id}</td>
+                            <td>${c.nombre}</td>
+                            <td>${c.apellido}</td>
+                            <td>${c.email}</td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
+
